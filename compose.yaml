@@ -1,0 +1,46 @@
+version: '3.0'
+
+services:
+  influxdb:
+    image: influxdb:2.7.4
+    container_name: influxdb-testing
+    ports:
+      - "18086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=developer
+      # - DOCKER_INFLUXDB_INIT_PASSWORD=/run/secrets/Influx_password
+      - DOCKER_INFLUXDB_INIT_PASSWORD=developer123456789
+      - DOCKER_INFLUXDB_INIT_ORG=HRSID
+      - DOCKER_INFLUXDB_INIT_BUCKET=iot-power
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="N0-wokkAdci1yNqj0srnUY0w4ccOyagMxdsrbBMRYOplg1eIK6E0f6aNtUInLp89t-IrvchA4P_-uLM8l40TCg=="
+    volumes:
+      - ./data_container/influxdata:/var/lib/influxdb2
+    # secrets:
+    #   - Influx_password
+    #   - influx_token
+    restart: always
+
+  telegraf:
+    image: telegraf:1.21
+    container_name: telegraf-testing
+    depends_on:
+      - influxdb
+    hostname: "serverpe"
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+    # secrets:
+    #   - influx_token
+    restart: always
+
+# secrets:
+#   Influx_password:
+#     file: password.txt
+#   influx_token:
+#     file: token.txt
+
+networks:
+  default:
+    name: iot-internal-network
+    external: true
+    driver: bridge
