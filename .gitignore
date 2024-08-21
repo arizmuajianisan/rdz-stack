@@ -1,0 +1,10 @@
+# Folder component
+data_container/
+
+# Confidential
+password.txt
+token.txt
+
+# Result Extraction
+*.hyper
+*.csv
