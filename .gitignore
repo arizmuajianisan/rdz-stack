@@ -8,6 +8,7 @@ token.txt
 # Result Extraction
 *.hyper
 *.csv
+*.twb
 
 # Environment
 .env
