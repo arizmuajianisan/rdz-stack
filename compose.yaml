@@ -3,41 +3,49 @@ version: '3.0'
 services:
   influxdb:
     image: influxdb:2.7.4
-    container_name: influxdb-testing
+    container_name: influxdb-rdz
     ports:
       - "18086:8086"
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=developer
-      # - DOCKER_INFLUXDB_INIT_PASSWORD=/run/secrets/Influx_password
-      - DOCKER_INFLUXDB_INIT_PASSWORD=developer123456789
-      - DOCKER_INFLUXDB_INIT_ORG=HRSID
-      - DOCKER_INFLUXDB_INIT_BUCKET=iot-power
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="N0-wokkAdci1yNqj0srnUY0w4ccOyagMxdsrbBMRYOplg1eIK6E0f6aNtUInLp89t-IrvchA4P_-uLM8l40TCg=="
+    env_file: configurations.env
     volumes:
       - ./data_container/influxdata:/var/lib/influxdb2
-    # secrets:
-    #   - Influx_password
-    #   - influx_token
+      - ./data_container/config:/etc/influxdb2
     restart: always
 
   telegraf:
     image: telegraf:1.21
-    container_name: telegraf-testing
+    container_name: telegraf-rdz
     depends_on:
       - influxdb
     hostname: "serverpe"
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
-    # secrets:
-    #   - influx_token
-    restart: always
+    restart: unless-stopped
 
-# secrets:
-#   Influx_password:
-#     file: password.txt
-#   influx_token:
-#     file: token.txt
+  grafana:
+    image: grafana/grafana:10.2.1
+    container_name: grafana-rdz
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/dashboards/:/var/lib/grafana/dashboards/
+    links:
+      - influxdb
+    depends_on:
+      - influxdb
+    restart: on-failure:3
+
+    python-query:
+      build: ./influx-exporter
+      container_name: python-query-rdz
+      env_file: ./influx-exporter/.env
+      volumes:
+      - ./influx-exporter:/app
+      depends_on:
+      - influxdb
+      restart: unless-stopped
 
 networks:
   default:
