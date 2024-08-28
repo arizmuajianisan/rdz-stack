@@ -1,6 +1,7 @@
 # Folder component
 data_container/
 logs/
+grafana_data/
 
 # Confidential
 password.txt
@@ -13,3 +14,6 @@ token.txt
 
 # Environment
 .env
+
+# Configuration
+mosquitto.conf
