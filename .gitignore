@@ -1,5 +1,6 @@
 # Folder component
-# data_container/
+data_container/
+logs/
 
 # Confidential
 password.txt
