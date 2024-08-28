@@ -1,4 +1,4 @@
-version: '3.0'
+version: "3.0"
 
 services:
   influxdb:
@@ -17,6 +17,7 @@ services:
     container_name: telegraf-rdz
     depends_on:
       - influxdb
+      - telegraf
     hostname: "serverpe"
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
@@ -28,24 +29,46 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
-      - ./grafana/dashboards/:/var/lib/grafana/dashboards/
+      - grafana_data/config/:/var/lib/grafana
+      - grafana_data/provisioning/:/etc/grafana/provisioning/
+      - grafana_data/dashboards/:/var/lib/grafana/dashboards/
+    environment:
+      GF_USERS_ALLOW_SIGN_UP: true
+      GF_SECURITY_ADMIN_USER: developer
+      GF_SECURITY_ADMIN_PASSWORD: developer123456789
     links:
       - influxdb
     depends_on:
       - influxdb
     restart: on-failure:3
 
-    python-query:
-      build: ./influx-exporter
-      container_name: python-query-rdz
-      env_file: ./influx-exporter/.env
-      volumes:
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt-rdz
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto_data/config:/mosquitto/config
+      - ./mosquitto_data/data:/mosquitto/data
+      - ./mosquitto_data/log:/mosquitto/log
+    environment:
+      MQTT_USER: serverpe
+      MQTT_PASSWORD: broker
+    entrypoint: /mosquitto/config/init.sh
+    stdin_open: true
+    restart: always
+    tty: true
+
+  python-query:
+    build: ./influx-exporter
+    container_name: python-query-rdz
+    env_file: ./influx-exporter/.env
+    volumes:
       - ./influx-exporter:/app
-      depends_on:
+    depends_on:
       - influxdb
-      restart: unless-stopped
+    restart: unless-stopped
 
 networks:
   default:
