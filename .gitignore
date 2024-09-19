@@ -14,6 +14,8 @@ token.txt
 
 # Environment
 .env
+*env*
+
 
 # Configuration
 mosquitto.conf
